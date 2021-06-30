@@ -1,0 +1,90 @@
+---
+- name: Prepare dedicated storage
+  community.general.lvol:
+    lv: "{{ lvm_promtail_lv_name }}"
+    size: "{{ lvm_promtail_lv_size }}"
+    state: present
+    thinpool: "{{ lvm_pool_name }}"
+    vg: "{{ lvm_vg_name }}"
+  when: dedicated_lvs | bool
+
+- name: Format FS of dedicated storage
+  community.general.filesystem:
+    fstype: "{{ lvm_fs_type }}"
+    dev: "/dev/{{ lvm_vg_name }}/{{ lvm_promtail_lv_name }}"
+  when: dedicated_lvs | bool
+
+- name: Mount dedicated storage
+  mount:
+    fstype: "{{ lvm_fs_type }}"
+    opts: defaults,nodev,nosuid,noexec
+    path: "{{ promtail_dir }}"
+    src: "/dev/mapper/{{ lvm_vg_name }}-{{ lvm_promtail_lv_name }}"
+    state: mounted
+  when: dedicated_lvs | bool
+
+- name: Create system group
+  group:
+    name: promtail
+    system: yes
+
+- name: Create system user
+  user:
+    create_home: no
+    group: promtail
+    groups:
+      - systemd-journal
+    home: "{{ promtail_dir }}"
+    name: promtail
+    password: '!'
+    shell: /sbin/nologin
+    system: yes
+
+- name: Manage Promtail var directory
+  file:
+    group: promtail
+    mode: '0700'
+    owner: promtail
+    path: "{{ promtail_dir }}"
+    state: directory
+
+- name: Download Promtail
+  get_url:
+   dest: /tmp
+   url: "{{ promtail_download_url }}"
+  register: promtail_download
+
+- name: Unpack Promtail
+  unarchive:
+    copy: no
+    dest: /usr/local/bin
+    group: root
+    mode: 0755
+    owner: root
+    src: "{{ promtail_download.dest }}"
+
+- name: Deploy configuration file
+  template:
+    dest: /etc/promtail.yaml
+    group: root
+    mode: 0644
+    owner: root
+    src: promtail.yaml.j2
+  notify:
+    - Restart Promtail
+
+- name: Deploy Promtail systemd service file
+  copy:
+    dest: /etc/systemd/system/promtail.service
+    group: root
+    mode: '0644'
+    owner: root
+    src: promtail.service
+  notify:
+    - Restart Promtail
+
+- name: Start and enable Promtail service
+  service:
+    enabled: yes
+    name: promtail
+    state: started

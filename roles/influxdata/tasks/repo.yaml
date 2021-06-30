@@ -1,0 +1,9 @@
+---
+- name: Define InfluxData repository on RedHat-family OS
+  copy:
+    dest: /etc/yum.repos.d/influxdata.repo
+    group: root
+    mode: 0644
+    owner: root
+    src: influxdata.repo
+  when: ansible_facts['os_family']|lower == 'redhat'

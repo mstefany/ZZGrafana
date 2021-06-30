@@ -1,0 +1,131 @@
+---
+- name: Prepare dedicated storage
+  community.general.lvol:
+    lv: "{{ lvm_influxdb_lv_name }}"
+    size: "{{ lvm_influxdb_lv_size }}"
+    state: present
+    thinpool: "{{ lvm_pool_name }}"
+    vg: "{{ lvm_vg_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Format FS of dedicated storage
+  community.general.filesystem:
+    fstype: "{{ lvm_fs_type }}"
+    dev: "/dev/{{ lvm_vg_name }}/{{ lvm_influxdb_lv_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Mount dedicated storage
+  mount:
+    fstype: "{{ lvm_fs_type }}"
+    opts: defaults,nodev,nosuid,noexec
+    path: "{{ influxdb_dir }}"
+    src: "/dev/mapper/{{ lvm_vg_name }}-{{ lvm_influxdb_lv_name }}"
+    state: mounted
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Install InfluxDB
+  dnf:
+   name: influxdb
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: influxdb
+
+- name: Preserve original configuration file
+  copy:
+    dest: /etc/influxdb/influxdb.conf.original
+    force: no  # copy only right after install
+    remote_src: yes
+    src: /etc/influxdb/influxdb.conf
+  tags: configuration
+
+- name: Check if RPMnew configuration file exists
+  stat:
+    path: /etc/influxdb/influxdb.conf.rpmnew
+  register: influxdb_conf_rpmnew
+  tags: always
+
+- name: Refresh original configuration file on package upgrade
+  copy:
+    dest: /etc/influxdb/influxdb.conf.original
+    remote_src: yes
+    src: /etc/influxdb/influxdb.conf.rpmnew
+  when: influxdb_conf_rpmnew.stat.exists == True
+  tags: configuration
+
+- name: Remove RPMnew file after package upgrade
+  file:
+    path: /etc/influxdb/influxdb.conf.rpmnew
+    state: absent
+  tags: configuration
+
+- name: Deploy configuration file
+  template:
+    dest: /etc/influxdb/influxdb.conf
+    group: root
+    mode: 0644
+    owner: root
+    src: influxdb.conf.j2
+  notify:
+    - Restart InfluxDB
+  tags: configuration
+
+- name: Start and enable InfluxDB service
+  service:
+    enabled: yes
+    name: influxdb
+    state: started
+  tags: service
+
+- name: Create an admin user
+  community.general.influxdb_user:
+    admin: yes
+    login_username: "{{ influxdb_admin_username }}"
+    login_password: "{{ influxdb_admin_password }}"
+    user_name: "{{ influxdb_admin_username }}"
+    user_password: "{{ influxdb_admin_password }}"
+  notify:
+    - Restart InfluxDB
+  tags: users
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Create Telegraf user
+  community.general.influxdb_user:
+    admin: yes
+    login_username: "{{ influxdb_admin_username }}"
+    login_password: "{{ influxdb_admin_password }}"
+    user_name: "{{ influxdb_telegraf_username }}"
+    user_password: "{{ influxdb_telegraf_password }}"
+  tags: users
+
+- name: Create Chronograf user
+  community.general.influxdb_user:
+    admin: yes
+    login_username: "{{ influxdb_admin_username }}"
+    login_password: "{{ influxdb_admin_password }}"
+    user_name: "{{ influxdb_chronograf_username }}"
+    user_password: "{{ influxdb_chronograf_password }}"
+  tags: users
+
+- name: Create Kapacitor user
+  community.general.influxdb_user:
+    admin: yes
+    login_username: "{{ influxdb_admin_username }}"
+    login_password: "{{ influxdb_admin_password }}"
+    user_name: "{{ influxdb_kapacitor_username }}"
+    user_password: "{{ influxdb_kapacitor_password }}"
+  tags: users
+
+- name: Create Grafana user
+  community.general.influxdb_user:
+    login_username: "{{ influxdb_admin_username }}"
+    login_password: "{{ influxdb_admin_password }}"
+    user_name: "{{ influxdb_grafana_username }}"
+    user_password: "{{ influxdb_grafana_password }}"
+    grants:
+      - database: 'telegraf'
+        privilege: 'READ'
+  tags: users

@@ -1,0 +1,4 @@
+---
+loki_dir: /var/lib/loki
+promtail_dir: /var/lib/promtail
+grafana_dir: /var/lib/grafana

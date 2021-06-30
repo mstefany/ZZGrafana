@@ -1,0 +1,26 @@
+---
+- name: ZZGrafana setup playbook
+  hosts: localhost
+  become: true
+  vars:
+    dedicated_lvs: true
+    project_domain: zelenyzlon.in
+    system_domain: monitoring.stefany.eu
+    upgrade_rpms: false
+
+    prometheus_web_external_url: https://monitoring.stefany.eu/prometheus
+    prometheus_targets:
+      node:
+      - targets:
+        - localhost:9100
+        labels:
+          env: production
+  vars_files:
+    - grafana.yaml
+    - modbus.yaml
+    - users.yaml
+  roles:
+#   - influxdata
+    - cloudalchemy.prometheus
+#   - grafana
+#   - nginx

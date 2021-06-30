@@ -1,0 +1,127 @@
+---
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  tags: selinux
+
+- name: Install nginx
+  dnf:
+   name: nginx
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: nginx
+
+- name: Generate Diffie-Hellman parameters
+  community.crypto.openssl_dhparam:
+    group: nginx
+    mode: "0600"
+    owner: nginx
+    path: /etc/nginx/dh_params 
+
+- name: Preserve original configuration file for default site
+  copy:
+    dest: /etc/nginx/conf.d/default.conf.original
+    force: no  # copy only right after install
+    remote_src: yes
+    src: /etc/nginx/conf.d/default.conf
+
+- name: Check if RPMnew configuration file exists
+  stat:
+    path: /etc/nginx/conf.d/default.conf.rpmnew
+  register: default_conf_rpmnew
+
+- name: Refresh original configuration file for default site on package upgrade
+  copy:
+    dest: /etc/nginx/conf.d/default.conf.original
+    remote_src: yes
+    src: /etc/nginx/conf.d/default.conf.rpmnew
+  when: default_conf_rpmnew.stat.exists == True
+
+- name: Remove RPMnew file after package upgrade
+  file:
+    path: /etc/nginx/conf.d/default.conf.rpmnew
+    state: absent
+
+- name: Deploy proxy_params configuration file
+  copy:
+    dest: /etc/nginx/proxy_params
+    group: root
+    mode: "0644"
+    owner: root
+    src: proxy_params
+  notify:
+    - Reload nginx
+
+- name: Manage default site SSL params directory
+  file:
+    group: root
+    mode: "0755"
+    owner: root
+    path: "/etc/nginx/{{ system_domain}}"
+    state: directory
+
+- name: Deploy default site SSL params file
+  template:
+    dest: "/etc/nginx/{{ system_domain}}/ssl_params"
+    group: root
+    mode: "0644"
+    owner: root
+    src: ssl_params_system.j2
+  notify:
+    - Reload nginx
+
+- name: Deploy default site configuration file
+  template:
+    dest: /etc/nginx/conf.d/default.conf
+    group: root
+    mode: "0644"
+    owner: root
+    src: default.conf.j2
+  notify:
+    - Reload nginx
+
+- name: Deploy production configuration file
+  copy:
+    dest: /etc/nginx/conf.d/production.conf
+    group: root
+    mode: "0644"
+    owner: root
+    src: production.conf
+  notify:
+    - Reload nginx
+
+- name: Manage grafana site SSL params directory
+  file:
+    group: root
+    mode: "0755"
+    owner: root
+    path: "/etc/nginx/{{ project_domain}}"
+    state: directory
+
+- name: Deploy grafana site SSL params file
+  template:
+    dest: /etc/nginx/{{ project_domain}}/ssl_params
+    group: root
+    mode: 0644
+    owner: root
+    src: ssl_params_project.j2
+  notify:
+    - Reload nginx
+
+- name: Deploy grafana site configuration file
+  template:
+    dest: /etc/nginx/conf.d/grafana.conf
+    group: root
+    mode: 0644
+    owner: root
+    src: grafana.conf.j2
+  notify:
+    - Reload nginx
+
+- name: Start and enable nginx service
+  service:
+    enabled: yes
+    name: nginx
+    state: started
+  tags: service

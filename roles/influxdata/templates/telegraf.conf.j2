@@ -1,0 +1,12 @@
+[global_tags]
+[agent]
+  interval = "{{ telegraf_agent_interval }}"
+  round_interval = {{ telegraf_agent_round_interval }}
+  metric_batch_size = 5000
+  metric_buffer_limit = 20000
+  collection_jitter = "{{ telegraf_agent_collection_jitter }}"
+  flush_interval = "{{ telegraf_agent_flush_interval }}"
+  flush_jitter = "0s"
+  precision = "{{ telegraf_agent_precision }}"
+  hostname = ""
+  omit_hostname = false

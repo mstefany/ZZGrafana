@@ -1,0 +1,14 @@
+# Read InfluxDB-formatted JSON metrics from one or more HTTP endpoints
+[[inputs.influxdb]]
+  urls = ["http://127.0.0.1:8086/debug/vars"]
+  username = "{{ influxdb_telegraf_username }}"
+  password = "{{ influxdb_telegraf_password }}"
+
+# Configuration for sending metrics to InfluxDB
+[[outputs.influxdb]]
+  urls = ["http://127.0.0.1:8086"]
+  database = "{{ influxdb_telegraf_database }}"
+  # retention_policy = ""
+  username = "{{ influxdb_telegraf_username }}"
+  password = "{{ influxdb_telegraf_password }}"
+  content_encoding = "identity"

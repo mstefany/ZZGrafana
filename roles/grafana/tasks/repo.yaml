@@ -1,0 +1,9 @@
+---
+- name: Define Grafana repository on RedHat-family OS
+  copy:
+    dest: /etc/yum.repos.d/grafana.repo
+    group: root
+    mode: 0644
+    owner: root
+    src: grafana.repo
+  when: ansible_facts['os_family']|lower == 'redhat'

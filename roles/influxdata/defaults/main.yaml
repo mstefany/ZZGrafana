@@ -1,0 +1,30 @@
+---
+lvm_vg_name: 'cs'
+lvm_pool_name: ''
+lvm_fs_type: 'xfs'
+
+lvm_influxdb_lv_name: 'influxdb'
+lvm_influxdb_lv_size: '4g'
+lvm_telegraf_lv_name: 'telegraf'
+lvm_telegraf_lv_size: '1g'
+lvm_chronograf_lv_name: 'chronograf'
+lvm_chronograf_lv_size: '1g'
+lvm_kapacitor_lv_name: 'kapacitor'
+lvm_kapacitor_lv_size: '1g'
+
+telegraf_agent_interval: '10s'
+telegraf_agent_round_interval: 'false'
+telegraf_agent_collection_jitter: '1s'
+telegraf_agent_flush_interval: '60s'
+telegraf_agent_precision: 's'
+
+influxdb_reporting_disabled: 'true'
+influxdb_query_log_enabled: 'false'
+influxdb_series_id_set_cache_size: 101
+influxdb_bind_address: ':8086'
+influxdb_http_auth_enabled: 'true'
+influxdb_log_enabled: 'false'
+influxdb_pprof_auth_enabled: 'true'
+influxdb_ping_auth_enabled: 'true'
+
+kapacitor_http_bind_address: ':9092'

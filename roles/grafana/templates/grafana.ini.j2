@@ -1,0 +1,17 @@
+instance_name = {{ project_domain }}
+
+[server]
+http_addr = 127.0.0.1
+domain = {{ project_domain }}
+root_url = https://%(project_domain)s/grafana/
+serve_from_sub_path = true
+
+[auth.google]
+enabled = true
+allow_sign_up = false
+client_id = {{ grafana_auth_google_client_id }}
+client_secret = {{ grafana_auth_google_client_secret }}
+scopes = https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email
+auth_url = https://accounts.google.com/o/oauth2/auth
+token_url = https://accounts.google.com/o/oauth2/token
+api_url = https://www.googleapis.com/oauth2/v1/userinfo

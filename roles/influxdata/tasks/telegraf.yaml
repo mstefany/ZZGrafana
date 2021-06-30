@@ -1,0 +1,109 @@
+---
+- name: Install Telegraf
+  dnf:
+   name: telegraf
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: telegraf
+
+- name: Preserve original configuration file
+  copy:
+    dest: /etc/telegraf/telegraf.conf.original
+    force: no  # copy only right after install
+    remote_src: yes
+    src: /etc/telegraf/telegraf.conf
+  tags: configuration
+
+- name: Check if RPMnew configuration file exists
+  stat:
+    path: /etc/telegraf/telegraf.conf.rpmnew
+  register: telegraf_conf_rpmnew
+  tags: always
+
+- name: Refresh original configuration file on package upgrade
+  copy:
+    dest: /etc/telegraf/telegraf.conf.original
+    remote_src: yes
+    src: /etc/telegraf/telegraf.conf.rpmnew
+  when: telegraf_conf_rpmnew.stat.exists == True
+  tags: configuration
+
+- name: Remove RPMnew file after package upgrade
+  file:
+    path: /etc/telegraf/telegraf.conf.rpmnew
+    state: absent
+  tags: configuration
+
+- name: Deploy general configuration file
+  template:
+    dest: /etc/telegraf/telegraf.conf
+    group: root
+    mode: 0644
+    owner: root
+    src: telegraf.conf.j2
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Deploy InfluxDB output configuration file
+  template:
+    dest: /etc/telegraf/telegraf.d/influxdb.conf
+    group: telegraf
+    mode: 0640
+    owner: telegraf
+    src: telegraf-influxdb.conf.j2
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Deploy system inputs configuration file
+  copy:
+    dest: /etc/telegraf/telegraf.d/system.conf
+    group: telegraf
+    mode: 0640
+    owner: telegraf
+    src: telegraf-system.conf
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Deploy nginx input configuration file
+  copy:
+    dest: /etc/telegraf/telegraf.d/nginx.conf
+    group: telegraf
+    mode: 0640
+    owner: telegraf
+    src: telegraf-nginx.conf
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Deploy UDP input configuration file
+  template:
+    dest: /etc/telegraf/telegraf.d/udp.conf
+    group: telegraf
+    mode: 0644
+    owner: telegraf
+    src: telegraf-udp.conf.j2
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Deploy Modbus inputs configuration files
+  template:
+    dest: /etc/telegraf/telegraf.d/{{ item['house'] }}.conf
+    group: telegraf
+    mode: 0640
+    owner: telegraf
+    src: telegraf-modbus.conf.j2
+  with_items:
+    - "{{ inputs_modbus.controllers }}"
+  notify:
+    - Restart Telegraf
+  tags: configuration
+
+- name: Start and enable Telegraf service
+  service:
+    enabled: yes
+    name: telegraf
+    state: started
+  tags: service

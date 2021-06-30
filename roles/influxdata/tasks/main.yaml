@@ -1,0 +1,36 @@
+---
+- name: Include distribution specific vars
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yaml'
+        - '{{ ansible_os_family | lower }}.yaml'
+        - default.yaml
+      paths:
+        - 'vars'
+  tags: always
+
+- name: Define repository
+  import_tasks: repo.yaml
+  tags: repository
+
+- name: Install dependencies
+  import_tasks: deps.yaml
+  tags: deps
+
+- name: Install and configure InfluxDB
+  import_tasks: influxdb.yaml
+  tags: influxdb
+
+- name: Install and configure Telegraf
+  import_tasks: telegraf.yaml
+  tags: telegraf
+
+- name: Install and configure Chronograf
+  import_tasks: chronograf.yaml
+  tags: chronograf
+
+- name: Install and configure Kapacitor
+  import_tasks: kapacitor.yaml
+  tags: kapacitor

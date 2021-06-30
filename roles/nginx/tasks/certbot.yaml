@@ -1,0 +1,15 @@
+---
+- name: Install certbot
+  dnf:
+   name: ['certbot', 'python3-certbot-dns-cloudflare']
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: certbot
+
+- name: Renew certs twice a day
+  cron:
+    hour: "6,18"
+    job: "[ -x /usr/bin/certbot ] && /usr/bin/certbot renew 2>&1 1>/dev/null"
+    minute: "0"
+    name: certbot_renew
+    state: present
+    user: root

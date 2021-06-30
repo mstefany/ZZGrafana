@@ -1,0 +1,12 @@
+[[inputs.socket_listener]]
+  service_address = "udp://:7000"
+  data_format = "csv"
+  csv_header_row_count = 0
+  csv_column_names = ["time", "loxone", "measurement", "value", "house", "room"]
+  csv_delimiter = ";"
+  csv_tag_columns = ["loxone", "house", "room"]
+  csv_measurement_column = "measurement"
+  csv_timestamp_column = "time"
+  csv_timestamp_format = "2006-01-02 15:04:05"
+  csv_timezone = "Europe/Prague"
+  csv_skip_values = []

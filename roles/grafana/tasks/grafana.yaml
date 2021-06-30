@@ -1,0 +1,69 @@
+---
+- name: Prepare dedicated storage
+  community.general.lvol:
+    lv: "{{ lvm_grafana_lv_name }}"
+    size: "{{ lvm_grafana_lv_size }}"
+    state: present
+    thinpool: "{{ lvm_pool_name }}"
+    vg: "{{ lvm_vg_name }}"
+  when: dedicated_lvs | bool
+
+- name: Format FS of dedicated storage
+  community.general.filesystem:
+    fstype: "{{ lvm_fs_type }}"
+    dev: "/dev/{{ lvm_vg_name }}/{{ lvm_grafana_lv_name }}"
+  when: dedicated_lvs | bool
+
+- name: Mount dedicated storage
+  mount:
+    fstype: "{{ lvm_fs_type }}"
+    opts: defaults,nodev,nosuid,noexec
+    path: "{{ grafana_dir }}"
+    src: "/dev/mapper/{{ lvm_vg_name }}-{{ lvm_grafana_lv_name }}"
+    state: mounted
+  when: dedicated_lvs | bool
+
+- name: Install Grafana
+  dnf:
+   name: grafana
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+
+- name: Preserve original configuration file
+  copy:
+    dest: /etc/grafana/grafana.ini.original
+    force: no  # copy only right after install
+    remote_src: yes
+    src: /etc/grafana/grafana.ini
+
+- name: Check if RPMnew configuration file exists
+  stat:
+    path: /etc/grafana/grafana.ini.rpmnew
+  register: grafana_ini_rpmnew
+
+- name: Refresh original configuration file on package upgrade
+  copy:
+    dest: /etc/grafana/grafana.ini.original
+    remote_src: yes
+    src: /etc/grafana/grafana.ini.rpmnew
+  when: grafana_ini_rpmnew.stat.exists == True
+
+- name: Remove RPMnew file after package upgrade
+  file:
+    path: /etc/grafana/grafana.ini.rpmnew
+    state: absent
+
+- name: Deploy configuration file
+  template:
+    dest: /etc/grafana/grafana.ini
+    group: grafana
+    mode: 0640
+    owner: root
+    src: grafana.ini.j2
+  notify:
+    - Restart Grafana
+
+- name: Start and enable Grafana service
+  service:
+    enabled: yes
+    name: grafana-server
+    state: started

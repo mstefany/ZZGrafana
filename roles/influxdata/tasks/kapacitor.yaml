@@ -1,0 +1,79 @@
+---
+- name: Prepare dedicated storage
+  community.general.lvol:
+    lv: "{{ lvm_kapacitor_lv_name }}"
+    size: "{{ lvm_kapacitor_lv_size }}"
+    state: present
+    thinpool: "{{ lvm_pool_name }}"
+    vg: "{{ lvm_vg_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Format FS of dedicated storage
+  community.general.filesystem:
+    fstype: "{{ lvm_fs_type }}"
+    dev: "/dev/{{ lvm_vg_name }}/{{ lvm_kapacitor_lv_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Mount dedicated storage
+  mount:
+    fstype: "{{ lvm_fs_type }}"
+    opts: defaults,nodev,nosuid,noexec
+    path: "{{ kapacitor_dir }}"
+    src: "/dev/mapper/{{ lvm_vg_name }}-{{ lvm_kapacitor_lv_name }}"
+    state: mounted
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Install Kapacitor
+  dnf:
+   name: kapacitor
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: kapacitor
+
+- name: Preserve original configuration file
+  copy:
+    dest: /etc/kapacitor/kapacitor.conf.original
+    force: no  # copy only right after install
+    remote_src: yes
+    src: /etc/kapacitor/kapacitor.conf
+  tags: configuration
+
+- name: Check if RPMnew configuration file exists
+  stat:
+    path: /etc/kapacitor/kapacitor.conf.rpmnew
+  register: kapacitor_conf_rpmnew
+  tags: always
+
+- name: Refresh original configuration file on package upgrade
+  copy:
+    dest: /etc/kapacitor/kapacitor.conf.original
+    remote_src: yes
+    src: /etc/kapacitor/kapacitor.conf.rpmnew
+  when: kapacitor_conf_rpmnew.stat.exists == True
+  tags: configuration
+
+- name: Remove RPMnew file after package upgrade
+  file:
+    path: /etc/kapacitor/kapacitor.conf.rpmnew
+    state: absent
+  tags: configuration
+
+- name: Deploy general configuration file
+  template:
+    dest: /etc/kapacitor/kapacitor.conf
+    group: root
+    mode: 0644
+    owner: root
+    src: kapacitor.conf.j2
+  notify:
+    - Restart Kapacitor
+  tags: configuration
+
+- name: Start and enable Kapacitor service
+  service:
+    enabled: yes
+    name: kapacitor
+    state: started
+  tags: service

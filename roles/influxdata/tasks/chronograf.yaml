@@ -1,0 +1,46 @@
+---
+- name: Prepare dedicated storage
+  community.general.lvol:
+    lv: "{{ lvm_chronograf_lv_name }}"
+    size: "{{ lvm_chronograf_lv_size }}"
+    state: present
+    thinpool: "{{ lvm_pool_name }}"
+    vg: "{{ lvm_vg_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Format FS of dedicated storage
+  community.general.filesystem:
+    fstype: "{{ lvm_fs_type }}"
+    dev: "/dev/{{ lvm_vg_name }}/{{ lvm_chronograf_lv_name }}"
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Mount dedicated storage
+  mount:
+    fstype: "{{ lvm_fs_type }}"
+    opts: defaults,nodev,nosuid,noexec
+    path: "{{ chronograf_dir }}"
+    src: "/dev/mapper/{{ lvm_vg_name }}-{{ lvm_chronograf_lv_name }}"
+    state: mounted
+  when: dedicated_lvs | bool
+  tags: lvm
+
+- name: Install Chronograf
+  dnf:
+   name: chronograf
+   state: "{{ upgrade_rpms | ternary('latest', 'installed') }}"
+  tags: chronograf
+
+- name: Prepare systemd override
+  file:
+    path: /etc/systemd/system/chronograf.service.d
+    state: directory
+  tags: service
+
+- name: Start and enable Chronograf service
+  service:
+    enabled: yes
+    name: chronograf
+    state: started
+  tags: service

@@ -1,0 +1,9 @@
+---
+- name: Define nginx repository on RedHat-family OS
+  copy:
+    dest: /etc/yum.repos.d/nginx.repo
+    group: root
+    mode: 0644
+    owner: root
+    src: nginx.repo
+  when: ansible_facts['os_family']|lower == 'redhat'

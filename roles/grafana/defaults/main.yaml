@@ -1,0 +1,17 @@
+---
+lvm_vg_name: 'cs'
+lvm_pool_name: ''
+lvm_fs_type: 'xfs'
+
+lvm_loki_lv_name: 'loki'
+lvm_loki_lv_size: '4g'
+lvm_promtail_lv_name: 'promtail'
+lvm_promtail_lv_size: '1g'
+lvm_grafana_lv_name: 'grafana'
+lvm_grafana_lv_size: '1g'
+
+loki_version: '2.2.1'
+loki_download_url: 'https://github.com/grafana/loki/releases/download/v{{loki_version}}/loki-linux-amd64.zip'
+
+promtail_version: '{{ loki_version }}'
+promtail_download_url: 'https://github.com/grafana/loki/releases/download/v{{promtail_version}}/promtail-linux-amd64.zip'

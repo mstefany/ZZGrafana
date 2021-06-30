@@ -1,0 +1,15 @@
+---
+- name: Restart Grafana
+  service:
+    name: grafana-server
+    state: restarted
+- name: Restart Loki
+  systemd:
+    daemon_reload: yes
+    name: loki
+    state: restarted
+- name: Restart Promtail
+  systemd:
+    daemon_reload: yes
+    name: promtail
+    state: restarted

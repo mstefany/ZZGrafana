@@ -1,0 +1,14 @@
+reporting-disabled = {{ influxdb_reporting_disabled }}
+[meta]
+  dir = "{{ influxdb_meta_dir }}"
+[data]
+  dir = "{{ influxdb_data_dir }}"
+  wal-dir = "{{ influxdb_wal_dir }}"
+  query-log-enabled = {{ influxdb_query_log_enabled }}
+  series-id-set-cache-size = {{ influxdb_series_id_set_cache_size }}
+[http]
+  bind-address = "{{ influxdb_bind_address }}"
+  auth-enabled = {{ influxdb_http_auth_enabled }}
+  log-enabled = {{ influxdb_log_enabled }}
+  pprof-auth-enabled = {{ influxdb_pprof_auth_enabled }}
+  ping-auth-enabled = {{ influxdb_ping_auth_enabled }}

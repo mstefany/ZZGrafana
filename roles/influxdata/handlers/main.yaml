@@ -1,0 +1,20 @@
+---
+- name: Restart InfluxDB
+  service:
+    name: influxdb
+    state: restarted
+
+- name: Restart Telegraf
+  service:
+    name: telegraf
+    state: restarted
+
+- name: Restart Chronograf
+  service:
+    name: chronograf
+    state: restarted
+
+- name: Restart Kapacitor
+  service:
+    name: kapacitor
+    state: restarted
