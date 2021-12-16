@@ -3,10 +3,10 @@
   interval = "{{ inputs_modbus.defaults.interval }}"
   tags = { house = "{{ item['house'] | upper }}", stage = "{{ item['stage'] }}", device = "plc", collector = "telegraf" }
 
-  name = "{{ item['house'] | upper }}"
+  name = "{{ item['house'] | upper }} PLC"
   slave_id = {{ inputs_modbus.defaults.id }}
   timeout = "{{ inputs_modbus.defaults.timeout }}"
-  controller = "tcp://{{ item['ip'] }}:{{ inputs_modbus.defaults.port }}"
+  controller = "tcp://{{ item['ip_plc'] }}:{{ inputs_modbus.defaults.port_plc }}"
 
   holding_registers = [
     { measurement = "baterie_napeti",                       name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.1, address = [24580]},
@@ -49,5 +49,115 @@
     { measurement = "atrea_izt_teplota_pozadovana2",        name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1, address = [24634]},
     { measurement = "atrea_izt_teplota_pozadovana1",        name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1, address = [24635]},
     { measurement = "menic_ups",                            name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0, address = [24636]},
-    { measurement = "atrea_sezona_pozadovana",              name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0, address = [24638]}
+    { measurement = "atrea_sezona_pozadovana",              name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0, address = [24638]},
+    { measurement = "baterie_priorita",                     name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0, address = [24639]}
+  ]
+
+[[inputs.modbus]]
+  interval = "{{ inputs_modbus.defaults.interval }}"
+  tags = { house = "{{ item['house'] | upper }}", stage = "{{ item['stage'] }}", device = "atrea", collector = "telegraf" }
+
+  name = "{{ item['house'] | upper }} Atrea"
+  slave_id = {{ inputs_modbus.defaults.id }}
+  timeout = "{{ inputs_modbus.defaults.timeout }}"
+  controller = "tcp://{{ item['ip_atrea'] | default(item['ip_plc']) }}:{{ inputs_modbus.defaults.port_atrea }}"
+
+  discrete_inputs = [
+    { measurement = "atrea_vstup_1_2_1_d1",     name = "value", address = [10200]},
+    { measurement = "atrea_vstup_1_2_2_d2",     name = "value", address = [10201]},
+    { measurement = "atrea_vstup_1_2_3_d3",     name = "value", address = [10202]},
+    { measurement = "atrea_vstup_1_2_4_d4",     name = "value", address = [10203]},
+    { measurement = "atrea_vstup_1_2_5_stp",    name = "value", address = [10204]},
+    { measurement = "atrea_status_rdio",        name = "value", address = [10206]},
+    { measurement = "atrea_vstup_1_3_1_df",     name = "value", address = [10207]},
+    { measurement = "atrea_nastav_rd5_rg",      name = "value", address = [10210]},
+    { measurement = "atrea_vstup_1_10_1_d1",    name = "value", address = [10211]},
+    { measurement = "atrea_nastav_rd5_tz",      name = "value", address = [10212]},
+    { measurement = "atrea_vstup_1_11_1_d1",    name = "value", address = [10213]},
+    { measurement = "atrea_upozor_filter",      name = "value", address = [11183]}
+
+  ]
+  coils = [
+    { measurement = "atrea_vystup_2_2_1_kk",    name = "value", address = [10200]},
+    { measurement = "atrea_vystup_2_2_2_yv1",   name = "value", address = [10201]},
+    { measurement = "atrea_vystup_2_2_4_sv",    name = "value", address = [10205]},
+    { measurement = "atrea_vystup_2_3_1_se",    name = "value", address = [10215]},
+    { measurement = "atrea_vystup_2_3_2_sc",    name = "value", address = [10216]},
+    { measurement = "atrea_vystup_2_10_1_r1",   name = "value", address = [10220]},
+    { measurement = "atrea_vystup_2_10_2_r2",   name = "value", address = [10221]},
+    { measurement = "atrea_vystup_2_10_3_r3",   name = "value", address = [10222]},
+    { measurement = "atrea_vystup_2_11_1_r1",   name = "value", address = [10230]},
+    { measurement = "atrea_vystup_2_11_2_r2",   name = "value", address = [10231]},
+    { measurement = "atrea_vystup_2_11_3_r3",   name = "value", address = [10232]},
+    { measurement = "atrea_nastav_3_15_5_pzs",  name = "value", address = [11402]},
+    { measurement = "atrea_nastav_3_15_10_au",  name = "value", address = [11403]},
+    { measurement = "atrea_nastav_3_15_11_bku", name = "value", address = [11404]}
+  ]
+  holding_registers = [
+    { measurement = "atrea_vystup_2_1_1_m1",          name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10200]},
+    { measurement = "atrea_vystup_2_1_2_m2",          name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10201]},
+    { measurement = "atrea_vystup_2_2_9_sa2",         name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10203]},
+    { measurement = "atrea_vystup_2_1_6_sc",          name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10204]},
+    { measurement = "atrea_vystup_2_1_3_sb_plus",     name = "value", byte_order = "AB", data_type = "UFIXED", scale = 1.0,   address = [10205]},
+    { measurement = "atrea_vystup_2_1_4_sb_minus",    name = "value", byte_order = "AB", data_type = "UFIXED", scale = 1.0,   address = [10206]},
+    { measurement = "atrea_vystup_2_3_4_da1",         name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10207]},
+    { measurement = "atrea_nastav_3_2_12_iv",         name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10502]},
+    { measurement = "atrea_nastav_3_1_2_tcprnp",      name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10514]},
+    { measurement = "atrea_nastav_3_11_61_in1_f",     name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10644]},
+    { measurement = "atrea_nastav_3_11_62_in1_dn",    name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10645]},
+    { measurement = "atrea_nastav_3_11_63_in1_dv",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10646]},
+    { measurement = "atrea_nastav_3_11_64_in1_hn",    name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.001, address = [10647]},
+    { measurement = "atrea_nastav_3_11_65_in1_hv",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10648]},
+    { measurement = "atrea_nastav_in1_blokace",       name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10649]},
+    { measurement = "atrea_nastav_rizeni_vykon",      name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10700]},
+    { measurement = "atrea_nastav_rizeni_rezim",      name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10701]},
+    { measurement = "atrea_nastav_rizeni_teplota",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10702]},
+    { measurement = "atrea_nastav_rizeni_zona",       name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10703]},
+    { measurement = "atrea_nastav_pozadavek_vykon",   name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10704]},
+    { measurement = "atrea_nastav_pozadavek_rezim",   name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10705]},
+    { measurement = "atrea_nastav_pozadavek_teplota", name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1,   address = [10706]},
+    { measurement = "atrea_nastav_pozadavek_zona",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10707]},
+    { measurement = "atrea_nastav_posledni_vykon",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10708]},
+    { measurement = "atrea_nastav_posledni_rezim",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10709]},
+    { measurement = "atrea_nastav_posledni_teplota",  name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1,   address = [10710]},
+    { measurement = "atrea_nastav_posledni_zona",     name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10711]},
+    { measurement = "atrea_nastav_vnuceny_rezim",     name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [10712]},
+    { measurement = "atrea_nastav_prepnuti_tsnts",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [11401]},
+    { measurement = "atrea_nastav_teplota_tsnts",     name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1,   address = [11402]},
+    { measurement = "atrea_nastav_3_11_1_tu1",        name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.1,   address = [11407]},
+    { measurement = "atrea_nastav_3_11_2_tu2",        name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.1,   address = [11408]},
+    { measurement = "atrea_nastav_3_11_3_tea",        name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.1,   address = [11409]},
+    { measurement = "atrea_nastav_3_11_4_teb",        name = "value", byte_order = "AB", data_type = "FIXED",  scale = 0.1,   address = [11410]},
+    { measurement = "atrea_nastav_interval_tsnts",    name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [11431]},
+    { measurement = "atrea_nastav_sp1",               name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [12914]},
+    { measurement = "atrea_nastav_sp2",               name = "value", byte_order = "AB", data_type = "UINT16", scale = 1.0,   address = [12915]},
+    { measurement = "atrea_nastav_tp1",               name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1,   address = [12925]},
+    { measurement = "atrea_nastav_tp2",               name = "value", byte_order = "AB", data_type = "UFIXED", scale = 0.1,   address = [12928]}
+  ]
+  input_registers = [
+    { measurement = "atrea_vstup_1_1_1_tu1",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10200]},
+    { measurement = "atrea_vstup_1_1_2_tu2",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10201]},
+    { measurement = "atrea_vstup_1_2_7_tea",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10202]},
+    { measurement = "atrea_vstup_1_2_8_teb",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10203]},
+    { measurement = "atrea_vstup_1_2_10_in1", name = "value", byte_order = "AB", data_type = "UFIXED", scale=0.001, address = [10205]},
+    { measurement = "atrea_vstup_t_cp",       name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10207]},
+    { measurement = "atrea_vstup_t_oda",      name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10211]},
+    { measurement = "atrea_vstup_t_sup",      name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10212]},
+    { measurement = "atrea_vstup_t_eta",      name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10213]},
+    { measurement = "atrea_vstup_t_eha",      name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10214]},
+    { measurement = "atrea_vstup_t_ida",      name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10215]},
+    { measurement = "atrea_vstup_1_10_2_t1",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10238]},
+    { measurement = "atrea_vstup_1_10_3_t2",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10239]},
+    { measurement = "atrea_vstup_1_10_6_t5",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10242]},
+    { measurement = "atrea_vstup_1_11_2_t1",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10247]},
+    { measurement = "atrea_vstup_1_11_3_t2",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10248]},
+    { measurement = "atrea_vstup_1_11_6_t5",  name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [10251]},
+    { measurement = "atrea_provoz_sezona",    name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11401]},
+    { measurement = "atrea_provoz_t_oda_avg", name = "value", byte_order = "AB", data_type = "FIXED",  scale=0.1,   address = [11420]},
+    { measurement = "atrea_prutok_4_1_1_sup", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11600]},
+    { measurement = "atrea_prutok_4_1_4_eta", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11601]},
+    { measurement = "atrea_prutok_4_1_2_sup", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11602]},
+    { measurement = "atrea_prutok_4_1_5_eta", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11603]},
+    { measurement = "atrea_prutok_4_1_7_oda", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11604]},
+    { measurement = "atrea_prutok_4_1_8_oda", name = "value", byte_order = "AB", data_type = "UINT16", scale=1.0,   address = [11605]}
   ]

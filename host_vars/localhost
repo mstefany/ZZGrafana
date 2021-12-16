@@ -2,7 +2,7 @@ lvm_vg_name: 'vg_system'
 lvm_pool_name: 'pool00'
 
 lvm_influxdb_lv_name: 'lv_var_lib_influxdb'
-lvm_influxdb_lv_size: '4g'
+lvm_influxdb_lv_size: '8g'
 lvm_telegraf_lv_name: 'lv_var_lib_telegraf'
 lvm_telegraf_lv_size: '1g'
 lvm_chronograf_lv_name: 'lv_var_lib_chronograf'

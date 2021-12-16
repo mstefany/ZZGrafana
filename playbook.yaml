@@ -12,7 +12,7 @@
     prometheus_targets:
       node:
       - targets:
-        - localhost:9100
+        - 192.168.2.1:9100
         labels:
           env: production
   vars_files:
@@ -20,7 +20,7 @@
     - modbus.yaml
     - users.yaml
   roles:
-#   - influxdata
-    - cloudalchemy.prometheus
+    - influxdata
+#   - cloudalchemy.prometheus
 #   - grafana
 #   - nginx
